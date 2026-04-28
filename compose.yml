@@ -1,0 +1,85 @@
+services:
+  app:
+    image: hub.osdec.gov.my/jdn/php:8.4-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app:delegated
+    networks:
+      - bootcamp_local
+  database:
+    image: mysql/mysql-server:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD-rootpass}"
+      MYSQL_DATABASE: "${DB_DATABASE-database}"
+      MYSQL_USER: "${DB_USERNAME-user}"
+      MYSQL_PASSWORD: "${DB_PASSWORD-pass}"
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    volumes:
+      - database:/var/lib/mysql:delegated
+    networks:
+      - bootcamp_local
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping"]
+  cache:
+    image: redis:7-alpine
+    volumes:
+      - cache:/data:delegated
+    networks:
+      - bootcamp_local
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+  node:
+    image: hub.osdec.gov.my/jdn/node:22
+    entrypoint: ["/docker-entrypoint.sh"]
+    command: ["npm", "run", "dev"]
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/app:delegated
+      - ./docker/node-entrypoint.sh:/docker-entrypoint.sh
+    networks:
+      - bootcamp_local
+      - jdn_global
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    ports:
+      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+    networks:
+      - bootcamp_local
+  queue:
+    image: hub.osdec.gov.my/jdn/php:8.4-nginx
+    depends_on:
+      - database
+      - cache
+    volumes:
+      - .:/app:delegated
+    working_dir: /app
+    command: [ "php", "artisan", "queue:work" ]
+    networks:
+      - bootcamp_local
+  scheduler:
+    image: hub.osdec.gov.my/jdn/php:8.4-nginx
+    restart: unless-stopped
+    depends_on:
+      - database
+      - cache
+    volumes:
+      - .:/app:delegated
+    working_dir: /app
+    command: [ "php", "artisan", "schedule:work" ]
+    networks:
+      - bootcamp_local
+#
+# Networks definitions
+#
+networks:
+  jdn_global:
+  bootcamp_local:
+volumes:
+  database:
+  cache:
