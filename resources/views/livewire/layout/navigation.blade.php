@@ -33,9 +33,11 @@ new class extends Component
                     <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('chirps')" :active="request()->routeIs('chirps')" wire:navigate>
+
+                    <x-responsive-nav-link :href="route('chirps')" :active="request()->routeIs('chirps')" wire:navigate><!-- [tl! add:start] -->
                         {{ __('Chirps') }}
                     </x-responsive-nav-link>
+
                 </div>
             </div>
 
