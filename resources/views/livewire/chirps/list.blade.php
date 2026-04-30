@@ -87,7 +87,11 @@ new class extends Component {
                     <livewire:chirps.edit :chirp="$chirp" :key="$chirp->id" />
                 @else
                     <p class="mt-4 text-lg text-gray-900">{{ $chirp->message }}</p>
+                    @if ($chirp->path)
+                        <img src="{{ $chirp->image }}" width="200" height="200">
+                    @endif
                 @endif
+
             </div>
         </div>
     @endforeach
